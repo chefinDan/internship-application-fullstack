@@ -1,0 +1,90 @@
+{
+	"info": {
+		"_postman_id": "e26725c9-2277-484a-b983-6ed059b94730",
+		"name": "cloudflare-internship-app",
+		"description": "This collection tests the \"variant\" endpoint to ensure that requests return each variant around 50% of the time",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET_variant",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6bf226a9-2887-417a-9fd7-fda0a6a66c99",
+						"exec": [
+							"",
+							"// This test script will record the total number of times",
+							"// Each variant is returned. the counts are recorded as env variables.",
+							"// The ratio should be close to 50/50",
+							"",
+							"const VARIANT = 'Variant';",
+							"const VARIANT_1 = 'Variant 1';",
+							"const VARIANT_2 = 'Variant 2';",
+							"pm.environment.set('variant1_cnt', 0); // reset counts to zero",
+							"pm.environment.set('variant2_cnt', 0); // reset counts to zero ",
+							"",
+							"const hasVariant = function (response) {",
+							"    pm.test(\"it should return a variant\", () => {",
+							"        pm.expect(response('h1').text()).to.not.be.empty;",
+							"        let variant = response('h1')['0'].children[0].data.trim();",
+							"        pm.expect(variant).to.include(VARIANT);    ",
+							"    });",
+							"}",
+							"",
+							"const updateVariantCnt = function (response) {",
+							"    pm.test(\"update variant count\", () => {",
+							"        let variant = response('h1')['0']",
+							"            .children[0]",
+							"            .data.trim();",
+							"        if(variant === VARIANT_1){",
+							"            let cnt = pm.environment.get(\"variant1_cnt\");",
+							"            cnt++;",
+							"            pm.environment.set(\"variant1_cnt\", cnt);",
+							"        }",
+							"        else if (variant === VARIANT_2){",
+							"            let cnt = pm.environment.get(\"variant2_cnt\");",
+							"            cnt++;",
+							"            pm.environment.set(\"variant2_cnt\", cnt);",
+							"        }",
+							"    });",
+							"}",
+							"",
+							"const checkResponse = function (err, response) {",
+							"    let res = cheerio.load(response.stream.toString());",
+							"    hasVariant(res);",
+							"    updateVariantCnt(res);",
+							"}",
+							"",
+							"const runTests = function (reqs) {",
+							"    for(i = 0; i < reqs; i++){",
+							"        pm.sendRequest(",
+							"            pm.environment.get('url'),",
+							"            checkResponse",
+							"        );",
+							"    }",
+							"}",
+							"",
+							"runTests(pm.environment.get('test_num'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}",
+					"host": [
+						"{{url}}"
+					]
+				},
+				"description": "Repeatedly makes GET requests to the root address "
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
